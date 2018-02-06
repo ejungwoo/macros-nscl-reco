@@ -59,7 +59,6 @@ void GetParameters(Int_t run, Int_t &numTotal, TString &GCData, TString &GGData)
 }
 
 void create_submit(Int_t start = 2900, Int_t end = 2905)
-//void create_submit(Int_t start = 2906, Int_t end = 2917)
 { 
   for (Int_t run = start; run <= end; run++) {
     Int_t numTotal = 0;
@@ -88,7 +87,7 @@ void create_submit(Int_t start = 2900, Int_t end = 2905)
     //out << "cd /mnt/spirit/analysis/changj/SpiRITROOT.latest/macros/" << endl; 
     //out << "source /mnt/spirit/analysis/user/leej/SpiRITROOT.develop/build/config.sh" << endl;
     out << "source /mnt/spirit/analysis/user/leej/SpiRITROOT." << branch << "/build/config.sh" << endl;
-    out << "cd /mnt/spirit/analysis/user/leej/reconstruction/" << endl;
+    out << "cd /mnt/spirit/analysis/user/leej/macros/reconstruction/" << endl;
     out << endl;
     out << Form("RUN=%d", run) << endl;
     out << Form("NTOTAL=%d", numTotal) << endl;

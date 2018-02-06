@@ -3,8 +3,8 @@ void make_summary()
   auto input_tree = new TChain("cbmsim");
   //TString tag = "trackChargeFix.1499.d50474b";  // before matching helix and reco track index
   //TString tag = "trackChargeFix.1500.8a7d00d";  // before format version fix
-  //TString tag = "trackChargeFix.1501.7e5c17a";  // JungWoo - cut gg
-  TString tag = "trackChargeFix.1502.9030344";  // PhysicsRun - use gg
+  TString tag = "trackChargeFix.1501.7e5c17a";  // JungWoo - cut gg
+  //TString tag = "trackChargeFix.1502.9030344";  // PhysicsRun - use gg
 
   Int_t runs[] = {2900,2901,2902,2903,2904,2905};
   Int_t numEventsInSplit = 2000;
@@ -17,58 +17,62 @@ void make_summary()
 
   TClonesArray *vertexArray = nullptr;
   TClonesArray *recoTrackArray = nullptr;
-  TClonesArray *vaTrackArray = nullptr;
+  TClonesArray *vaddTrackArray = nullptr;
 
   input_tree -> SetBranchAddress("STVertex", &vertexArray);
   input_tree -> SetBranchAddress("STRecoTrack", &recoTrackArray);
-  input_tree -> SetBranchAddress("VATracks", &vaTrackArray);
+  input_tree -> SetBranchAddress("VATracks", &vaddTrackArray);
 
-  auto fileName = TString("data/summary.")+tag+".root";
+  auto fileName = TString("data/summary.")+tag+".merged.root";
   TFile *output_file = new TFile(fileName,"recreate");
   TTree *output_tree = new TTree("data","");
 
   bool goodVertex;
-  Int_t runID, splitID, eventID, entry, trackID, numTracks, vertexID;
+  Int_t runID, splitID, eventID, entry, numTracks, vertexID, numdEdx;
+  TVector3 posV;
 
   //reco
-  Int_t trackCharge0, numdEdx0, pdg0;
-  Double_t distVertex0, distVertex20, dedx0, trackLength0, c10, c20;
-  TVector3 posVertex0, p0;
+  Int_t charge_reco, pdg_reco, trackID_reco;
+  Double_t distV_reco, distV2_reco, dedx_reco, length_reco;
+  TVector3 p_reco, pocaV_reco, pocaV2_reco;
 
   //va
-  Int_t trackCharge, numdEdx, pdg;
-  Double_t distVertex, distVertex2, dedx, trackLength, c1, c2;
-  TVector3 posVertex, p;
+  Int_t charge_vadd, pdg_vadd, trackID_vadd;
+  Double_t distV_vadd, distV2_vadd, dedx_vadd, length_vadd;
+  TVector3 p_vadd, pocaV_vadd, pocaV2_vadd;
 
-  output_tree -> Branch("runID",&runID);
-  output_tree -> Branch("splitID",&splitID);
-  output_tree -> Branch("eventID",&eventID);
-  output_tree -> Branch("entry",&entry);
-  output_tree -> Branch("trackID",&trackID);
-  output_tree -> Branch("numTracks",&numTracks);
-  output_tree -> Branch("vertexID",&vertexID);
-  output_tree -> Branch("goodVertex",&goodVertex);
-  output_tree -> Branch("posVertex","TVector3",&posVertex);
+  output_tree -> Branch("runID",      &runID);
+  output_tree -> Branch("splitID",    &splitID);
+  output_tree -> Branch("eventID",    &eventID);
+  output_tree -> Branch("numdEdx",    &numdEdx);
+  output_tree -> Branch("goodVertex", &goodVertex);
+  output_tree -> Branch("posV",       "TVector3", &posV);
 
-  output_tree -> Branch("p0",          "TVector3",&p0);
-  output_tree -> Branch("dedx0",       &dedx0);
-  output_tree -> Branch("trackCharge0",&trackCharge0);
-  output_tree -> Branch("distVertex0", &distVertex0);
-  output_tree -> Branch("pdg0",        &pdg0);
-  output_tree -> Branch("numdEdx0",    &numdEdx0);
-  output_tree -> Branch("trackLength0",&trackLength0);
-  output_tree -> Branch("c10",         &c10);
-  output_tree -> Branch("c20",         &c20);
+  output_tree -> Branch("pdg_reco",     &pdg_reco);
+  output_tree -> Branch("dedx_reco",    &dedx_reco);
+  output_tree -> Branch("charge_reco",  &charge_reco);
+  output_tree -> Branch("length_reco",  &length_reco);
+  output_tree -> Branch("p_reco",       "TVector3", &p_reco);
+  output_tree -> Branch("pocaV_reco",   "TVector3", &pocaV_reco);
+  output_tree -> Branch("pocaV2_reco",  "TVector3", &pocaV2_reco);
 
-  output_tree -> Branch("p",           "TVector3",&p);
-  output_tree -> Branch("dedx",        &dedx);
-  output_tree -> Branch("trackCharge", &trackCharge);
-  output_tree -> Branch("distVertex",  &distVertex);
-  output_tree -> Branch("pdg",         &pdg);
-  output_tree -> Branch("numdEdx",     &numdEdx);
-  output_tree -> Branch("trackLength", &trackLength);
-  output_tree -> Branch("c1",          &c1);
-  output_tree -> Branch("c2",          &c2);
+  output_tree -> Branch("pdg_vadd",     &pdg_vadd);
+  output_tree -> Branch("dedx_vadd",    &dedx_vadd);
+  output_tree -> Branch("distV_vadd",   &distV_vadd);
+  output_tree -> Branch("length_vadd",  &length_vadd);
+  output_tree -> Branch("p_vadd",       "TVector3", &p_vadd);
+  output_tree -> Branch("pocaV_vadd",   "TVector3", &pocaV_vadd);
+  output_tree -> Branch("pocaV2_vadd",  "TVector3", &pocaV2_vadd);
+
+  //output_tree -> Branch("entry",     &entry);
+  //output_tree -> Branch("numTracks", &numTracks);
+  //output_tree -> Branch("vertexID",  &vertexID);
+  //output_tree -> Branch("trackID_reco", &trackID_reco);
+  //output_tree -> Branch("trackID_vadd", &trackID_vadd);
+  //output_tree -> Branch("distV_reco",   &distV_reco);
+  //output_tree -> Branch("distV2_reco",  &distV2_reco);
+  //output_tree -> Branch("distV2_vadd",  &distV2_vadd);
+  //output_tree -> Branch("charge_vadd",  &charge_vadd);
 
   Int_t numEvents = input_tree -> GetEntries();
   for (entry = 0; entry < numEvents; ++entry)
@@ -78,7 +82,7 @@ void make_summary()
 
     input_tree -> GetEntry(entry);
 
-    Int_t idxRun = 0;
+    auto idxRun = 0;
     for (;idxRun < 6; ++idxRun) {
       auto tempID = eventID - numEventsInRun[idxRun];
       if (tempID < 0)
@@ -92,52 +96,56 @@ void make_summary()
 
     if (vertexArray -> GetEntries() != 1) continue;
     auto vertex = (STVertex *) vertexArray -> At(0);
-    posVertex = vertex -> GetPos();
+    posV = vertex -> GetPos();
 
     goodVertex = false;
-    if (posVertex.Z()<-9.49569&&posVertex.Z()>-12.80121&&posVertex.X()>-15&&posVertex.X()<15&&posVertex.Y()<-206.06&&posVertex.Y()>-246.06)
+    if (posV.Z()<-9.49569&&posV.Z()>-12.80121&&posV.X()>-15&&posV.X()<15&&posV.Y()<-206.06&&posV.Y()>-246.06)
       goodVertex = true;
 
-    numTracks = vaTrackArray -> GetEntries();
-    for (trackID = 0; trackID < numTracks; ++trackID)
+    auto firstTrack = (STRecoTrack *) vaddTrackArray -> At(0);
+    if (firstTrack == nullptr)
+      continue;
+
+    vertexID = firstTrack -> GetVertexID();
+
+    trackID_reco = 0;
+    trackID_vadd = 0;
+
+    numTracks = recoTrackArray -> GetEntries();
+    if (numTracks != vaddTrackArray -> GetEntries())
+      continue;
+
+    for (; trackID_reco < numTracks; ++trackID_reco)
     {
-      auto track0 = (STRecoTrack *) vaTrackArray -> At(trackID);
-      auto track = (STRecoTrack *) vaTrackArray -> At(trackID);
-      pdg0 = STPID::GetPDG(track0 -> GetPID());
-      pdg = STPID::GetPDG(track -> GetPID());
+      trackID_vadd = trackID_reco; //XXX
+      auto track_reco = (STRecoTrack *) recoTrackArray -> At(trackID_reco);
+      auto track_vadd = (STRecoTrack *) vaddTrackArray -> At(trackID_vadd);
 
-      if (track -> GetVertexID() < 0) continue;
-      vertexID = track -> GetVertexID();
+      auto dedxArray0 = track_reco -> GetdEdxPointArray();
+      numdEdx = dedxArray0 -> size();
+      if (numdEdx < 4)
+        continue;
 
-      auto posPOCAVertex0 = track0 -> GetPOCAVertex();
-      distVertex0 = sqrt(pow(posPOCAVertex0.X()-posVertex.X(),2)+pow(posPOCAVertex0.Y()-posVertex.Y(),2)+pow(posPOCAVertex0.Z()-posVertex.Z(),2));
+      pdg_reco = STPID::GetPDG(track_reco -> GetPID());
+      pdg_vadd  = STPID::GetPDG(track_vadd  -> GetPID());
 
-      auto posPOCAVertex = track -> GetPOCAVertex();
-      distVertex = sqrt(pow(posPOCAVertex.X()-posVertex.X(),2)+pow(posPOCAVertex.Y()-posVertex.Y(),2)+pow(posPOCAVertex.Z()-posVertex.Z(),2));
-      //auto posTargetPlane = track->GetPosTargetPlane();
-      //distVertex2 = sqrt(pow(posTargetPlane.X()-posVertex.X(),2)+pow(posTargetPlane.Y()-posVertex.Y(),2)+pow(posTargetPlane.Z()-posVertex.Z(),2));
+      pocaV_reco = track_reco -> GetPOCAVertex() - posV;      //distV_reco = pocaV_reco.Mag();
+      pocaV_vadd = track_vadd -> GetPOCAVertex() - posV;      //distV_vadd = pocaV_vadd.Mag();
+      pocaV2_reco = track_reco -> GetPosTargetPlane() - posV; //distV2_vadd = sqrt(pocaV2_reco.X()*pocaV2_reco.X() + pocaV2_reco.Y()*pocaV2_reco.Y());
+      pocaV2_vadd = track_vadd -> GetPosTargetPlane() - posV; //distV2_vadd = sqrt(pocaV2_vadd.X()*pocaV2_vadd.X() + pocaV2_vadd.Y()*pocaV2_vadd.Y());
 
-      auto dedxArray0 = track0 -> GetdEdxPointArray();
-      numdEdx0 = dedxArray0 -> size();
-
-      if (numdEdx0 < 4) continue;
       auto dedxFirst = dedxArray0 -> at(0);
       auto dedxLast = dedxArray0 -> at(numdEdx-1);
-      trackLength0 = dedxLast.fLength - dedxFirst.fLength;
-      trackLength = dedxLast.fLength
+      length_reco = dedxLast.fLength - dedxFirst.fLength;
+      length_vadd = dedxLast.fLength;
 
-      c10 = track0 -> GetEffCurvature1();
-      c20 = track0 -> GetEffCurvature2();
-      c1  = track  -> GetEffCurvature1();
-      c2  = track  -> GetEffCurvature2();
+      charge_reco = track_reco -> GetCharge();
+      charge_vadd  = track_vadd  -> GetCharge();
 
-      trackCharge0 = track0 -> GetCharge();
-      trackCharge  = track  -> GetCharge();
-
-      p0 = track0 -> GetMomentum();
-      p  = track  -> GetMomentum();
-      dedx0 = track0 -> GetdEdxWithCut(0,0.7);
-      dedx  = track  -> GetdEdxWithCut(0,0.7);
+      p_reco = track_reco -> GetMomentum();
+      p_vadd = track_vadd -> GetMomentum();
+      dedx_reco = track_reco -> GetdEdxWithCut(0,0.7);
+      dedx_vadd = track_vadd -> GetdEdxWithCut(0,0.7);
 
       output_tree -> Fill();
     }
